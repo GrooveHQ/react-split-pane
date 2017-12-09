@@ -22,21 +22,25 @@ function unFocus(document, window) {
     } catch (e) {}
   }
 }
+const controlSnapTypes = {
+  STEP: 'STEP',
+  SIZE: 'SIZE',
+  SIZE_ON_RELEASE: 'SIZE_ON_RELEASE',
+};
+
+const setStep = (stepSize) => ({type: controlSnapTypes.STEP, stepSize})
+const setSize = (size) => ({type: controlSnapTypes.SIZE, size})
+const setSizeOnRelease = (size) => ({type: controlSnapTypes.SIZE_ON_RELEASE, size})
 
 class SplitPane extends React.Component {
-  constructor() {
-    super();
-
-    this.onMouseDown = this.onMouseDown.bind(this);
-    this.onTouchStart = this.onTouchStart.bind(this);
-    this.onMouseMove = this.onMouseMove.bind(this);
-    this.onTouchMove = this.onTouchMove.bind(this);
-    this.onMouseUp = this.onMouseUp.bind(this);
-
-    this.state = {
-      active: false,
-      resized: false,
-    };
+  state = {
+    active: false,
+    // resized: false,
+    startPosition: this.props.defaultSize,
+    sizeOnRelease: null,
+    position: null,
+    draggingDelta: null,
+    jumpDirection: null,
   }
 
   componentDidMount() {
@@ -56,42 +60,50 @@ class SplitPane extends React.Component {
     document.removeEventListener('touchmove', this.onTouchMove);
   }
 
-  onMouseDown(event) {
+  onMouseDown = (event) => {
     const eventWithTouches = Object.assign({}, event, {
       touches: [{ clientX: event.clientX, clientY: event.clientY }],
     });
     this.onTouchStart(eventWithTouches);
   }
 
-  onTouchStart(event) {
-    const { allowResize, onDragStarted, split } = this.props;
+  onTouchStart = (event) => {
+    const { allowResize, onDragStarted, split, defaultSize } = this.props;
+    const { startPosition, active } = this.state;
+    const isVertical = split === 'vertical'
+
     if (allowResize) {
       unFocus(document, window);
       const position =
-        split === 'vertical'
+        isVertical
           ? event.touches[0].clientX
           : event.touches[0].clientY;
 
       if (typeof onDragStarted === 'function') {
         onDragStarted();
       }
+      
+      document.body.style.cursor = isVertical ? 'col-resize' : 'row-resize'
+
       this.setState({
         active: true,
         position,
+        startPosition: !active && !startPosition && defaultSize > 0 ? defaultSize : startPosition,
       });
     }
   }
 
-  onMouseMove(event) {
+  onMouseMove = (event) => {
     const eventWithTouches = Object.assign({}, event, {
       touches: [{ clientX: event.clientX, clientY: event.clientY }],
     });
     this.onTouchMove(eventWithTouches);
   }
 
-  onTouchMove(event) {
-    const { allowResize, maxSize, minSize, onChange, split, step } = this.props;
-    const { active, position } = this.state;
+  onTouchMove = (event) => {
+    const { allowResize, maxSize, minSize, onChange, split, step, controlSnap } = this.props;
+    const { active, position, startPosition, draggingDelta, jumpDirection } = this.state;
+    console.log("position >> ", position)
     if (allowResize && active) {
       unFocus(document, window);
       const isPrimaryFirst = this.props.primary === 'first';
@@ -109,7 +121,13 @@ class SplitPane extends React.Component {
               ? event.touches[0].clientX
               : event.touches[0].clientY;
           const size = split === 'vertical' ? width : height;
+          
+
           let positionDelta = position - current;
+          
+          console.log("current >> ", current)
+          console.log("positionDelta >> ", positionDelta)
+
           if (step) {
             if (Math.abs(positionDelta) < step) {
               return;
@@ -119,6 +137,7 @@ class SplitPane extends React.Component {
             positionDelta = ~~(positionDelta / step) * step;
           }
           let sizeDelta = isPrimaryFirst ? positionDelta : -positionDelta;
+          console.log("size delta", sizeDelta)
 
           const pane1Order = parseInt(window.getComputedStyle(node).order);
           const pane2Order = parseInt(window.getComputedStyle(node2).order);
@@ -136,36 +155,131 @@ class SplitPane extends React.Component {
             }
           }
 
-          let newSize = size - sizeDelta;
-          const newPosition = position - positionDelta;
+          let newSize = startPosition + draggingDelta;
+          console.log("newSize", newSize)
+
+          let hitLimit;
+
+          let newPosition = position - positionDelta;
+          console.log("newPosition = position - positionDelta >> ", newPosition)
+          
+          // if (newPosition < minSize) {
+          //   newPosition = minSize;
+          // }else if (maxSize !== undefined && newPosition > newMaxSize) {
+          //   newPosition = newMaxSize;
+          // }
 
           if (newSize < minSize) {
             newSize = minSize;
+            hitLimit = 'MIN';
           } else if (maxSize !== undefined && newSize > newMaxSize) {
             newSize = newMaxSize;
-          } else {
+            hitLimit = 'MAX';
+          }
+
+          if(controlSnap) {
+
+            console.log("draggingDelta 😱", {startPosition, current})
+            const controlSnapResult = controlSnap({
+              hitLimit,
+              startPosition,
+              draggingDelta,
+              newPosition, 
+              setSize,
+              setSizeOnRelease,
+              setStep,
+            });
+
+            this.state.draggingDelta = draggingDelta - positionDelta;            
+            
+            if(controlSnapResult && controlSnapResult.constructor === Object) {
+              
+              if(controlSnapResult.type === controlSnapTypes.STEP){
+                // newSize = controlSnapResult.size;
+              }else if(controlSnapResult.type === controlSnapTypes.SIZE_ON_RELEASE){
+                // this.state.sizeOnRelease = ;
+                // debugger
+                // if(!jumpDirection){
+                  this.state.sizeOnRelease = controlSnapResult.size
+                // }else{
+                  // this.state.sizeOnRelease = null
+                // }
+                console.log("💚💚💚💚💚💚💚💚💚💚", controlSnapResult.size)
+              }else if(controlSnapResult.type === controlSnapTypes.SIZE){
+                if(controlSnapResult.size !== newSize){
+                  newSize = controlSnapResult.size;
+                  // debugger
+                  // debugger
+                console.log("CLEARING 💚💚💚")
+                  this.state.jumpDirection = draggingDelta
+                  this.setState({
+                    jumpDirection: draggingDelta,
+                    draggingDelta: 0,
+                    startPosition: newSize, 
+                    sizeOnRelease: null
+                  })
+                }
+              }
+            }
+          }
+
+          if(hitLimit){
             this.setState({
-              position: newPosition,
-              resized: true,
+              draggingDelta: 0,
             });
           }
 
-          if (onChange) onChange(newSize);
-          this.setState({ draggedSize: newSize });
-          ref.setState({ size: newSize });
+          // if(!hitLimit) {
+            if(newPosition !== this.state.position){
+              this.setState({
+                position: newPosition,
+                // resized: true,
+              });
+            }
+          // }
+          //(N < 0) == (Y < 0)
+          // if(!jumpDirection || ((jumpDirection < 0) != (draggingDelta < 0))){
+            this.setRealSize(newSize)
+          // }
         }
       }
     }
   }
 
-  onMouseUp() {
+  onMouseUp = () => {
     const { allowResize, onDragFinished } = this.props;
-    const { active, draggedSize } = this.state;
+    const { active, draggedSize, sizeOnRelease } = this.state;
     if (allowResize && active) {
       if (typeof onDragFinished === 'function') {
         onDragFinished(draggedSize);
       }
-      this.setState({ active: false });
+      
+      document.body.style.cursor = "";
+
+        // debugger
+      if(this.state.sizeOnRelease > 0) {
+        this.setRealSize(this.state.sizeOnRelease);
+      }
+      
+      this.setState({ 
+        active: false, 
+        draggingDelta: 0,
+        jumpDirection: null,
+        // startPosition: this.state.position, 
+        sizeOnRelease: null 
+      });
+    }
+  }
+
+  setRealSize = (size) => {
+    const { primary, onChange } = this.props;    
+    const ref = primary === 'first' ? this.pane1 : this.pane2;
+    if (ref) {
+      if(this.state.draggedSize !== size){
+        if (onChange) onChange(size);
+        this.setState({ draggedSize: size });
+        ref.setState({ size });                  
+      }
     }
   }
 
@@ -188,6 +302,12 @@ class SplitPane extends React.Component {
         });
       }
     }
+  }
+
+  classNameWithState = (className) => {
+    const { active } = this.state;
+    if(!active) return ''
+    return `${className}--active`
   }
 
   render() {
@@ -213,10 +333,11 @@ class SplitPane extends React.Component {
       split,
       style: styleProps,
     } = this.props;
+    const { active } = this.state;
     const disabledClass = allowResize ? '' : 'disabled';
     const resizerClassNamesIncludingDefault = resizerClassName
-      ? `${resizerClassName} ${RESIZER_DEFAULT_CLASSNAME}`
-      : resizerClassName;
+      ? `${resizerClassName} ${this.classNameWithState(resizerClassName)} ${RESIZER_DEFAULT_CLASSNAME} ${this.classNameWithState(RESIZER_DEFAULT_CLASSNAME)}`
+      : `${RESIZER_DEFAULT_CLASSNAME} ${this.classNameWithState(RESIZER_DEFAULT_CLASSNAME)}`;
 
     const style = Object.assign(
       {},

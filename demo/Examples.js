@@ -24,6 +24,49 @@ const BasicVerticalExample = () => {
     );
 };
 
+const BasicVerticalSnapPointsExample = () => {
+    const pointA = 350
+    const pointB = 600
+    const threshold = 40
+    const min = 50
+    const max = pointB
+    return (
+        <SplitPane 
+            split="vertical"
+            minSize={min}
+            maxSize={max}
+            defaultSize={pointA}
+            controlSnap={({newPosition, draggingDelta, startPosition, setSize, setSizeOnRelease, setStep}) => {
+                console.log({newPosition, draggingDelta, startPosition})
+                if(startPosition === min) {
+                    if(Math.abs(draggingDelta) < threshold){ 
+                        return setSizeOnRelease(min)
+                    }else if(draggingDelta > 0){
+                        return setSize(pointA)
+                    }
+                }else if(startPosition === pointA){
+                    if(Math.abs(draggingDelta) < threshold){ 
+                        return setSizeOnRelease(pointA)
+                    }else if(draggingDelta > 0){
+                        return setSize(pointB)
+                    }else{
+                        return setSize(min)
+                    }
+                }else if(startPosition === pointB){
+                    if(Math.abs(draggingDelta) < threshold){ 
+                        return setSizeOnRelease(pointB)
+                    }else if(draggingDelta < 0) {
+                        return setSize(pointA)
+                    }                    
+                }
+            }}
+        >
+            <div />
+            <div />
+        </SplitPane>
+    );
+};
+
 const BasicHorizontalExample = () => {
     return (
         <SplitPane split="horizontal">
@@ -222,6 +265,7 @@ class SnapToPositionExample extends Component {
 
 if (document.getElementById('simple-nested-example')) render(<SimpleNestedExample />, document.getElementById('simple-nested-example'));
 if (document.getElementById('basic-vertical-example')) render(<BasicVerticalExample />, document.getElementById('basic-vertical-example'));
+if (document.getElementById('basic-vertical-snap-points-example')) render(<BasicVerticalSnapPointsExample />, document.getElementById('basic-vertical-snap-points-example'));
 if (document.getElementById('basic-horizontal-example')) render(<BasicHorizontalExample />, document.getElementById('basic-horizontal-example'));
 if (document.getElementById('basic-step-example')) render(<BasicStepExample />, document.getElementById('basic-step-example'));
 if (document.getElementById('percentage-vertical-example')) render(<PercentageVerticalExample />, document.getElementById('percentage-vertical-example'));
