@@ -29,7 +29,7 @@ node_modules
 
 .idea
 *.iml
-/lib
+# /lib
 
 lcov.info
 .DS_Store
