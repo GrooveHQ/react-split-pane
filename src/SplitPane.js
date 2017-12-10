@@ -75,15 +75,30 @@ class SplitPane extends React.Component {
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('touchmove', this.onTouchMove);
 
-    const { allowResize, onDragStarted, split, defaultSize } = this.props;
+    const {
+      allowResize,
+      onDragStarted,
+      split,
+      primary,
+      defaultSize,
+    } = this.props;
     const { startPosition, active } = this.state;
     const isVertical = split === 'vertical';
 
     if (allowResize) {
       unFocus(document, window);
-      const position = isVertical
+
+      let position = isVertical
         ? event.touches[0].clientX
         : event.touches[0].clientY;
+
+      const isPrimaryFirst = primary === 'first';
+
+      if (!isPrimaryFirst) {
+        const nodePane = ReactDOM.findDOMNode(this.splitPane);
+        const rect = nodePane.getBoundingClientRect();
+        position = rect.x + rect.width - position;
+      }
 
       if (typeof onDragStarted === 'function') {
         onDragStarted();
@@ -119,6 +134,7 @@ class SplitPane extends React.Component {
       split,
       step,
       controlSnap,
+      primary,
     } = this.props;
     const {
       active,
@@ -131,7 +147,7 @@ class SplitPane extends React.Component {
     if (allowResize && active) {
       unFocus(document, window);
 
-      const isPrimaryFirst = this.props.primary === 'first';
+      const isPrimaryFirst = primary === 'first';
       const ref = isPrimaryFirst ? this.pane1 : this.pane2;
       const ref2 = isPrimaryFirst ? this.pane2 : this.pane1;
 
@@ -139,9 +155,8 @@ class SplitPane extends React.Component {
         const node = ReactDOM.findDOMNode(ref);
         const node2 = ReactDOM.findDOMNode(ref2);
         const nodePane = ReactDOM.findDOMNode(this.splitPane);
-
+        // console.log("draggingDelta", \\\\)
         if (node.getBoundingClientRect) {
-          const rect = nodePane.getBoundingClientRect();
           // const width = node.getBoundingClientRect().width;
           // const height = node.getBoundingClientRect().height;
 
@@ -150,7 +165,10 @@ class SplitPane extends React.Component {
               ? event.touches[0].clientX
               : event.touches[0].clientY;
 
-          current = isPrimaryFirst ? current : rect.x + rect.width - current;
+          if (!isPrimaryFirst) {
+            const rect = nodePane.getBoundingClientRect();
+            current = rect.x + rect.width - current;
+          }
 
           // const size = split === 'vertical' ? width : height;
 

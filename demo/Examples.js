@@ -42,7 +42,7 @@ const Right = () => {
             pane2Style={{ backgroundColor: 'yellow' }}
             // paneStyle={{ transition: 'all .1s ease' }}
             controlSnap={({jumped, newPosition, current, draggingDelta, startPosition, setSize, setSizeOnRelease, setStep}) => {
-                console.log("PANE 2", {jumped, newPosition, current})
+                console.log("PANE 2", {current, draggingDelta})
                 if (newPosition >= 0 && newPosition <= min) {
                     return setSize(min)
                 }else if(newPosition > min && newPosition <= min + threshold){
