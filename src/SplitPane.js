@@ -58,13 +58,19 @@ class SplitPane extends React.Component {
   componentWillUnmount() {}
 
   onMouseDown = event => {
+    event.preventDefault();
     const eventWithTouches = Object.assign({}, event, {
       touches: [{ clientX: event.clientX, clientY: event.clientY }],
     });
-    this.onTouchStart(eventWithTouches);
+    this.onClickDown(eventWithTouches);
   };
 
   onTouchStart = event => {
+    event.preventDefault();
+    this.onClickDown(event);
+  };
+
+  onClickDown = event => {
     document.addEventListener('mouseup', this.onMouseUp);
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('touchmove', this.onTouchMove);
