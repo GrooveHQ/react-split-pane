@@ -207,6 +207,8 @@ class SplitPane extends React.Component {
                     sizeOnRelease: null,
                   });
                 }
+              } else {
+                this.state.sizeOnRelease = null;
               }
             }
           }
