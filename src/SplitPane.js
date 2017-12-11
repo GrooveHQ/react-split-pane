@@ -257,35 +257,33 @@ class SplitPane extends React.Component {
   };
 
   setRealSize = size => {
+    if (this.state.draggedSize === size) return;
     const { primary, onChange } = this.props;
     const ref = primary === 'first' ? this.pane1 : this.pane2;
     if (ref) {
-      if (this.state.draggedSize !== size) {
-        if (onChange) onChange(size);
-        this.setState({ draggedSize: size });
-        ref.setState({ size });
-      }
+      if (onChange) onChange(size);
+      this.setState({ draggedSize: size });
+      ref.setState({ size });
     }
   };
 
   setSize(props, state) {
+    const newSize =
+      props.size ||
+      (state && state.draggedSize) ||
+      props.defaultSize ||
+      props.minSize;
+    if (newSize === state.draggedSize) return;
+
     const { primary } = this.props;
     const ref = primary === 'first' ? this.pane1 : this.pane2;
-    let newSize;
     if (ref) {
-      newSize =
-        props.size ||
-        (state && state.draggedSize) ||
-        props.defaultSize ||
-        props.minSize;
       ref.setState({
         size: newSize,
       });
-      if (props.size !== state.draggedSize) {
-        this.setState({
-          draggedSize: newSize,
-        });
-      }
+      this.setState({
+        draggedSize: newSize,
+      });
     }
   }
 
