@@ -44,6 +44,7 @@ class SplitPane extends React.Component {
     sizeOnRelease: null,
     position: null,
     draggingDelta: null,
+    cleanDraggingDelta: null,
     // jumpDirection: null,
   };
 
@@ -141,6 +142,7 @@ class SplitPane extends React.Component {
       position,
       startPosition,
       draggingDelta,
+      cleanDraggingDelta,
       jumped,
     } = this.state;
 
@@ -183,6 +185,7 @@ class SplitPane extends React.Component {
               current,
               startPosition,
               draggingDelta,
+              cleanDraggingDelta,
               newPosition,
               setSize,
               setSizeOnRelease,
@@ -190,6 +193,7 @@ class SplitPane extends React.Component {
             });
 
             this.state.draggingDelta = draggingDelta - positionDelta;
+            this.state.cleanDraggingDelta = this.state.draggingDelta;
 
             if (controlSnapResult && controlSnapResult.constructor === Object) {
               if (controlSnapResult.type === controlSnapTypes.STEP) {
@@ -199,6 +203,8 @@ class SplitPane extends React.Component {
               ) {
                 this.state.sizeOnRelease = controlSnapResult.size;
               } else if (controlSnapResult.type === controlSnapTypes.SIZE) {
+                this.state.cleanDraggingDelta = 0;
+
                 if (controlSnapResult.size !== newSize) {
                   newSize = controlSnapResult.size;
                   this.setState({
@@ -256,6 +262,7 @@ class SplitPane extends React.Component {
         active: false,
         jumped: false,
         draggingDelta: 0,
+        cleanDraggingDelta: 0,
         sizeOnRelease: null,
       });
     }
