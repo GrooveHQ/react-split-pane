@@ -206,12 +206,12 @@ class SplitPane extends React.Component {
                     startPosition: newSize,
                     sizeOnRelease: null,
                   });
+                } else {
+                  this.setState({
+                    jumped: true,
+                    sizeOnRelease: null,
+                  });
                 }
-              } else {
-                this.setState({
-                  jumped: true,
-                  sizeOnRelease: null,
-                });
               }
             }
           }
