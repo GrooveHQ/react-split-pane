@@ -40,9 +40,7 @@ const Right = () => {
             style={{ backgroundColor: 'red', position: 'static' }}
             pane1Style={{ backgroundColor: 'pink' }}
             pane2Style={{ backgroundColor: 'yellow' }}
-            // paneStyle={{ transition: 'all .1s ease' }}
             controlSnap={({jumped, newPosition, current, draggingDelta, startPosition, setSize, setSizeOnRelease, setStep}) => {
-                console.log("PANE 2", {current, draggingDelta})
                 if (newPosition >= 0 && newPosition <= min) {
                     return setSize(min)
                 }else if(newPosition > min && newPosition <= min + threshold){
@@ -96,9 +94,7 @@ const BasicVerticalSnapPointsExample = () => {
             defaultSize={pointA}
             maxSize={max}
             minSize={min}
-            // paneStyle={{ transition: 'all .1s ease' }}
             controlSnap={({jumped, current, newPosition, draggingDelta, startPosition, setSize, setSizeOnRelease, setStep}) => {
-                console.log("PANE 1", {jumped, newPosition, current})
                 if (newPosition >= 0 && newPosition <= min) {
                     return setSize(min)
                 }else if(newPosition > min && newPosition <= min + threshold){

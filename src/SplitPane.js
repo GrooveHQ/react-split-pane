@@ -38,14 +38,11 @@ const setSizeOnRelease = size => ({
 class SplitPane extends React.Component {
   state = {
     active: false,
-    // resized: false,
-    // startPositionLocal: this.props.defaultSize,
     startPosition: this.props.defaultSize,
     sizeOnRelease: null,
     position: null,
     draggingDelta: null,
     cleanDraggingDelta: null,
-    // jumpDirection: null,
   };
 
   componentDidMount() {
@@ -110,7 +107,6 @@ class SplitPane extends React.Component {
       this.setState({
         active: true,
         position,
-        // startPositionLocal: !active && !startPosition && defaultSize > 0 ? defaultSize : startPositionLocal,
         startPosition:
           !active && !startPosition && defaultSize > 0
             ? defaultSize
@@ -157,11 +153,8 @@ class SplitPane extends React.Component {
         const node = ReactDOM.findDOMNode(ref);
         const node2 = ReactDOM.findDOMNode(ref2);
         const nodePane = ReactDOM.findDOMNode(this.splitPane);
-        // console.log("draggingDelta", \\\\)
-        if (node.getBoundingClientRect) {
-          // const width = node.getBoundingClientRect().width;
-          // const height = node.getBoundingClientRect().height;
 
+        if (node.getBoundingClientRect) {
           let current =
             split === 'vertical'
               ? event.touches[0].clientX
@@ -171,8 +164,6 @@ class SplitPane extends React.Component {
             const rect = nodePane.getBoundingClientRect();
             current = rect.x + rect.width - current;
           }
-
-          // const size = split === 'vertical' ? width : height;
 
           let positionDelta = position - current;
           const newPosition = position - positionDelta;
@@ -197,7 +188,9 @@ class SplitPane extends React.Component {
 
             if (controlSnapResult && controlSnapResult.constructor === Object) {
               if (controlSnapResult.type === controlSnapTypes.STEP) {
-                // TODO
+                // TODO This is feature we could add later
+                // to jump in steps.
+                // - Gaston Morixe
               } else if (
                 controlSnapResult.type === controlSnapTypes.SIZE_ON_RELEASE
               ) {
@@ -214,7 +207,6 @@ class SplitPane extends React.Component {
                   });
                 } else {
                   this.setState({
-                    // jumped: null,
                     sizeOnRelease: null,
                   });
                 }
